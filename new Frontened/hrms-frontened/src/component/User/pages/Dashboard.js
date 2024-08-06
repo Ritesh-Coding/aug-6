@@ -330,7 +330,7 @@ const Dashboard = () => {
 
 
 
-            <EmployeeChat adminId="2" userId={userId}/>
+            <EmployeeChat recipientId="1"/>
           
 
 

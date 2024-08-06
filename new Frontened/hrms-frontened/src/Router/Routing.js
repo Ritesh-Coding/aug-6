@@ -30,7 +30,7 @@ import AssignLeave from '../component/Admin/pages/AssignLeave';
 import Holidays from '../component/Admin/pages/Holidays';
 import Calender from '../component/User/pages/Calender';
 import AdminProfile from '../component/Admin/pages/AdminProfile';
-import { AdminChat } from '../component/Admin/pages/AdminChat';
+import AdminChat from '../component/Admin/pages/AdminChat';
 const router  = createBrowserRouter(
   createRoutesFromElements(
     <>
