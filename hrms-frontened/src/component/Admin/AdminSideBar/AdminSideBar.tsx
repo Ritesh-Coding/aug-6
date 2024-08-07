@@ -53,6 +53,7 @@ interface Notification {
   };
   message: string;
   status: string;
+  total_notification: number
 }
 
 const formatDate = (dateString: string): string => {
@@ -81,7 +82,7 @@ const AdminSidebar: React.FC = () => {
         console.log("I got all the notification as ", res.data);
       })
       .catch(error => console.error("Error fetching notifications:", error));
-  }, [axiosInstance]);
+  }, []);
 
   return (
     <>
