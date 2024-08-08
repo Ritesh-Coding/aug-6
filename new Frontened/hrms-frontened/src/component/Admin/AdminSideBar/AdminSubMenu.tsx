@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { IconType } from 'react-icons';
 
 const SidebarLink = styled(Link)`
   display: flex;
@@ -40,37 +41,52 @@ const DropdownLink = styled(Link)`
   }
 `;
 
-const AdminSubMenu = ({ item }) => {
+interface SubNavItem {
+  title: string;
+  path: string;
+  icon: IconType;
+}
+
+interface SidebarItem {
+  title: string;
+  path: string;
+  icon: IconType;
+  iconClosed?: IconType;
+  iconOpened?: IconType;
+  subNav?: SubNavItem[];
+}
+
+interface AdminSubMenuProps {
+  item: SidebarItem;
+}
+
+const AdminSubMenu: React.FC<AdminSubMenuProps> = ({ item }) => {
   const [subnav, setSubnav] = useState(false);
 
   const showSubnav = () => setSubnav(!subnav);
 
   return (
     <>
-      <SidebarLink to={item.path} onClick={item.subNav && showSubnav}>
-        
+      <SidebarLink to={item.path} onClick={item.subNav ? showSubnav : undefined}>
         <div>
-          {item.icon}
-      <SidebarLabel>{item.title}</SidebarLabel>
+          {React.createElement(item.icon)}
+          <SidebarLabel>{item.title}</SidebarLabel>
         </div>
         <div>
           {subnav
-            ? item.iconOpened
+            ? item.iconOpened && React.createElement(item.iconOpened)
             : item.subNav
-            ? item.iconClosed
-            : ""}
+            ? item.iconClosed && React.createElement(item.iconClosed)
+            : null}
         </div>
       </SidebarLink>
       {subnav &&
-        item.subNav.map((item, index) => {
-          console.log(index)
-          return (
-            <DropdownLink to={item.path} key={index}>
-              {item.icon}
-              <SidebarLabel>{item.title}</SidebarLabel>
-            </DropdownLink>
-          );
-        })}
+        item.subNav?.map((subItem, index) => (
+          <DropdownLink to={subItem.path} key={index}>
+            {React.createElement(subItem.icon)}
+            <SidebarLabel>{subItem.title}</SidebarLabel>
+          </DropdownLink>
+        ))}
     </>
   );
 };

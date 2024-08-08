@@ -1,0 +1,97 @@
+class AttendanceSerializer(serializers.ModelSerializer):
+    total_office_hours = serializers.SerializerMethodField()
+    total_working_hours = serializers.SerializerMethodField()
+    total_present_days = serializers.SerializerMethodField()
+    total_late_days = serializers.SerializerMethodField()
+    total_half_days = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DailyAttendanceReport
+        fields = [
+            'date', 'entry_time', 'exit_time',
+            'total_working_hours', 'total_break_hours', 'net_working_hours',
+            'total_office_hours', 'total_present_days', 'total_late_days', 'total_half_days'
+        ]
+
+    def validate(self, attrs):
+        # Set the employee ID from the context, which will be provided based on the user role
+        attrs['employee_id'] = self.context.get('employee_id', self.context['request'].user.id)
+        return super().validate(attrs)
+
+    def get_total_office_hours(self, obj):
+        start_date = self.context.get('start_date')
+        end_date = self.context.get('end_date')
+        employee_id = self.context.get('employee_id', self.context['request'].user.id)
+
+        queryset = DailyAttendanceReport.objects.filter(employee_id=employee_id)
+        if start_date and end_date:
+            queryset = queryset.filter(date__range=[start_date, end_date])
+
+        total_days = queryset.count()
+        return total_days * 9
+
+    def get_total_working_hours(self, obj):
+        start_date = self.context.get('start_date')
+        end_date = self.context.get('end_date')
+        employee_id = self.context.get('employee_id', self.context['request'].user.id)
+
+        queryset = DailyAttendanceReport.objects.filter(employee_id=employee_id)
+        if start_date and end_date:
+            queryset = queryset.filter(date__range=[start_date, end_date])
+
+        total_working_seconds = queryset.aggregate(
+            total=Sum(ExpressionWrapper(F('total_working_hours'), output_field=DurationField()))
+        )['total']
+
+        if total_working_seconds:
+            total_working_hours = total_working_seconds.total_seconds() / 3600
+            return total_working_hours
+        return 0
+
+    def get_total_present_days(self, obj):
+        start_date = self.context.get('start_date')
+        end_date = self.context.get('end_date')
+        employee_id = self.context.get('employee_id', self.context['request'].user.id)
+
+        queryset = DailyAttendanceReport.objects.filter(employee_id=employee_id)
+        if start_date and end_date:
+            queryset = queryset.filter(date__range=[start_date, end_date])
+
+        total_present_days = queryset.aggregate(total_days=Count('id'))['total_days']
+
+        return total_present_days or 0
+
+    def get_total_late_days(self, obj):
+        start_date = self.context.get('start_date')
+        end_date = self.context.get('end_date')
+        employee_id = self.context.get('employee_id', self.context['request'].user.id)
+
+        queryset = DailyAttendanceReport.objects.filter(employee_id=employee_id)
+        if start_date and end_date:
+            queryset = queryset.filter(date__range=[start_date, end_date])
+
+        total_late_days = queryset.filter(
+            entry_time__gt=datetime.combine(date.today(), time(10, 0))
+        ).aggregate(total_days=Count('id'))['total_days']
+
+        return total_late_days or 0
+
+    def get_total_half_days(self, obj):
+        start_date = self.context.get('start_date')
+        end_date = self.context.get('end_date')
+        employee_id = self.context.get('employee_id', self.context['request'].user.id)
+
+        queryset = DailyAttendanceReport.objects.filter(employee_id=employee_id)
+        if start_date and end_date:
+            queryset = queryset.filter(date__range=[start_date, end_date])
+
+        half_days_records = queryset.annotate(
+            working_hours=ExpressionWrapper(
+                F('exit_time') - F('entry_time'),
+                output_field=DurationField()
+            )
+        ).filter(
+            working_hours__lte=timedelta(hours=5)
+        ).count()
+
+        return half_days_records or 0

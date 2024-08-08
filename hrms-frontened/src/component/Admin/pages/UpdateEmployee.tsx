@@ -362,7 +362,6 @@ const UpdateEmployee = () => {
             </div>
             <div style={{ width: `50%`  }}>
                 <div className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-
                     { <Formik
                         initialValues={{                       
                             aadhar_card:employeeDocuments.length > 0 ? employeeDocuments[0]["aadhar_card"] : '',
